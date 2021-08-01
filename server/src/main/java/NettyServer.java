@@ -56,7 +56,6 @@ public class NettyServer {
                     })
                     //настраиваем опции для обрабатываемых каналов(клиентских соединений) на чтение и запись
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
-
             //начинаем принимать входящие сообщения
             //работаем до последнего потока
             ChannelFuture future = b.bind(port).sync();

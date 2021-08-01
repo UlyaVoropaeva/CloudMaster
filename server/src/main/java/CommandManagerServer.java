@@ -45,13 +45,11 @@ public class CommandManagerServer extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
     }
 
-
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
     }
-
     public void printMsg(String msg){
         gmServer.printMsg(msg);
     }

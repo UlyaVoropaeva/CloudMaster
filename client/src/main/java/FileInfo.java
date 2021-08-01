@@ -13,12 +13,10 @@ public class FileInfo {
         public String getName() {
             return name;
         }
-
         FileType(String name) {
             this.name = name;
         }
     }
-
     //полное имя файла
     private String fullfilename;
     //имя файла
@@ -31,7 +29,6 @@ public class FileInfo {
     private long size;
     //Локальная дата и время последнего изменения
     private LocalDateTime lastModified;
-
 
     public String getFullFilename() {
         return fullfilename;
@@ -105,13 +102,11 @@ public class FileInfo {
         String fullFileName = path.getFileName().toString();
         return fullFileName;
         //Получает имя за вычетом пути из полного имени файла и проверяем
-
     }
 
     //получаем имя файла и  удаляем расширение из имени файла.
     public String getFileNameRemoveExtension(Path path) {
         String fullFileName = path.getFileName().toString();
-
 
         if (Files.isDirectory(path)) {
             return fullFileName;

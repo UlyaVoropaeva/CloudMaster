@@ -7,5 +7,4 @@ public class ServerMain {
         GMServer css = new GMServer();
         css.run();
     }
-
 }

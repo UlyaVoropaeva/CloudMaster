@@ -35,7 +35,6 @@ public class AuthMessage  extends AbstractMessage {
         this.password = password;
     }
 
-
     //конструктор для регистрации нового пользователя
     public AuthMessage(String login, String first_name, String last_name, String password) {
         this.login = login;

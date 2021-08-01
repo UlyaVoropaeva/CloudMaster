@@ -3,8 +3,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
-
-
 public class CommandManager extends ChannelInboundHandlerAdapter {
     //принимаем объект исходящего хэндлера
     private GMClient storageClient;

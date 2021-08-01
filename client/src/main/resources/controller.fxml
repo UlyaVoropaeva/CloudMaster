@@ -25,7 +25,6 @@
         </Button>
 
     </HBox>
-
     <HBox VBox.vgrow="ALWAYS">
             <fx:include fx:id="leftPanel" source="panelLocal.fxml" HBox.hgrow="ALWAYS" />
             <fx:include fx:id="rightPanel" source="panelCloud.fxml" HBox.hgrow="ALWAYS" />

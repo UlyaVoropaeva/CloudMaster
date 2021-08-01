@@ -96,7 +96,6 @@ public class Controller {
      *  last_name - фамилия пользователя
      *  password - пароль пользователя
      */
-
     public void demandRegistration(String login, String first_name, String last_name, String password) {
         storageClient.demandRegistration(login, first_name, last_name, password);
     }
