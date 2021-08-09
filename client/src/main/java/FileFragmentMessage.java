@@ -108,7 +108,6 @@ public class FileFragmentMessage extends AbstractMessage {
         raf.close();
         bis.close();
     }
-
     public FileInfo getToDirectoryItem() {
         return toDirectoryItem;
     }

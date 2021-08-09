@@ -21,7 +21,6 @@ class CommandMessage implements Serializable {
         this.command = command;
         this.messageObject = messageObject;
     }
-
     public Commands getCommand() {
         return command;
     }

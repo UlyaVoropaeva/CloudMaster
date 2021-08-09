@@ -155,7 +155,6 @@ public class CommandManagerServer extends ChannelInboundHandlerAdapter {
                 //инициируем переменную типа команды - ответ об ошибке
                 command = Commands.SERVER_RESPONSE_UPLOAD_FILE_FRAGS_ERROR;
             }
-
         }
     }
 

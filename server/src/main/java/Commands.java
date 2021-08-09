@@ -21,5 +21,4 @@ public enum Commands {
         SERVER_RESPONSE_UPLOAD_FILE_FRAG_ERROR,//ответ сервера, что при загрузке(сохранении) фрагмент файла произошла ошибка
         SERVER_RESPONSE_UPLOAD_FILE_FRAGS_OK,//ответ сервера, что сборка файла из загруженных фрагментов прошла успешно
         SERVER_RESPONSE_UPLOAD_FILE_FRAGS_ERROR,//ответ сервера, что при сборке файла из загруженных фрагментов произошла ошибка
-
 }

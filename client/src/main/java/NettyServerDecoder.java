@@ -183,7 +183,6 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
         //устанавливаем режим отображения "Подключен"
         controller.setDisconnectedMode(false);
     }
-
     /**
      * Метод обрабатывает полученное от сервера подтверждение готовности отключения клиента.
      *

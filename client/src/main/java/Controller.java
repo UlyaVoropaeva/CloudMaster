@@ -436,7 +436,6 @@ public class Controller implements Initializable {
         });
         return menuItemRename;
     }
-
     public void btnExitAction(ActionEvent actionEvent) {
         Platform.exit();
     }

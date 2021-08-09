@@ -83,7 +83,6 @@ public class FileInfo {
         this.lastModified = lastModified;
     }
 
-
     //Информация о файле
     public FileInfo(Path path) {
         try {

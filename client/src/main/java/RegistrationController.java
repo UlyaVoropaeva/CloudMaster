@@ -72,7 +72,6 @@ public class RegistrationController {
         last_name.setText("");
         password.setText("");
     }
-
     /*
      * Метод закрывает окно.
      */

@@ -32,8 +32,6 @@ public class GMClient {
     private FileUtils fileUtils = FileUtils.getInstance();
 
 
-
-
     public GMClient(Controller controller) {
         //принимаем объект контроллера
         this.controller = controller;

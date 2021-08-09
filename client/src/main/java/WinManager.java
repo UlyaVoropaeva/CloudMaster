@@ -22,7 +22,6 @@ public class WinManager {
     //объявляем объект контроллера окна регистрации
     private RegistrationController registrationController;
 
-
     //объявляем объект контроллера окна авторизации
 
     public void init(Controller controller) {

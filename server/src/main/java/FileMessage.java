@@ -53,7 +53,6 @@ public class FileMessage extends AbstractMessage {
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
     }
-
     public byte[] getData() {
         return data;
     }

@@ -39,7 +39,6 @@ public class NettyServer {
                     //Указываем обработчики, которые будем использовать для открытого канала .
                     //ChannelInitializer ( - принимает запросы) помогает сконфигурировать как будем обрабатывать входящие сообщения от клиента
                     .childHandler(new ChannelInitializer<NioSocketChannel>() {
-                        //
                         protected void initChannel(NioSocketChannel nioSocketChannel) {
                             //прописываем набор "преобразователей"
                             nioSocketChannel.pipeline().addLast(
@@ -60,7 +59,6 @@ public class NettyServer {
             ChannelFuture future = b.bind(port).sync();
             //если соединение установлено
             onConnectionReady(future);
-
             future.channel().closeFuture().sync();
         } finally {
             mainGroup.shutdownGracefully();

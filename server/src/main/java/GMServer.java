@@ -10,7 +10,6 @@ public class GMServer {
     //объявляем переменную порта сервера
     private int PORT =8189;
     private FileUtils fileUtils = new FileUtils();
-
     /**
      * Метод запускает приложение сервера.
      */

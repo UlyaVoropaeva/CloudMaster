@@ -343,7 +343,6 @@ public class FileUtils {
         //теперь можем удалить пустую папку
         return Objects.requireNonNull(folder.listFiles()).length == 0 && folder.delete();
     }
-
     /**
      * Метод возвращает реальный путь к объекту элемента.
      * @param itemPathname - строка относительного пути к объекту элемента
