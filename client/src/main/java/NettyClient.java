@@ -63,7 +63,6 @@ public class NettyClient {
             workerGroup.shutdownGracefully();
         }
     }
-
     public void onConnectionReady(ChannelFuture future) {
         printMsg("Waiting for the server answer...");
     }

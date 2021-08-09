@@ -110,7 +110,6 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
         //устанавливаем режим отображения GUI "Подключен"
         controller.setDisconnectedMode(false);
     }
-
     /**
      * Метод обрабатывает полученное от сервера подтверждение готовности отключения клиента.
      * @param commandMessage - объект сообщения(команды)

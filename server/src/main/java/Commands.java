@@ -11,5 +11,4 @@ public enum Commands {
         REQUEST_SERVER_AUTH,//запрос на сервер на авторизацию пользователя с таким логином и паролем
         SERVER_RESPONSE_AUTH_OK,//ответ сервера, что авторизация прошла успешно
         SERVER_RESPONSE_AUTH_ERROR,//ответ сервера, что при авторизации произошла ошибка
-
     }

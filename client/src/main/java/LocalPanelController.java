@@ -27,7 +27,6 @@ public class LocalPanelController implements Initializable {
 
         @FXML
         TextField pathField;
-
         @Override
         public void initialize(URL location, ResourceBundle resources) {
             TableColumn<FileInfo, String> filenameColumn = new TableColumn<>("Имя");

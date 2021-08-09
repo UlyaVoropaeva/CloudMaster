@@ -25,7 +25,6 @@ public class WinManager {
 
     //объявляем объект контроллера окна авторизации
 
-
     public void init(Controller controller){
         this.controller = controller;
     }

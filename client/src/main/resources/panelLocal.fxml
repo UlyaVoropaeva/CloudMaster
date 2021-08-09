@@ -12,5 +12,4 @@
     </HBox>
     <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"/>
 
-
 </VBox>

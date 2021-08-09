@@ -60,7 +60,6 @@ public class GMClient {
         }
     }
 
-
     public Controller getController() {
         return controller;
     }
