@@ -22,10 +22,9 @@ public class WinManager {
     //объявляем объект контроллера окна регистрации
     private RegistrationController registrationController;
 
-
     //объявляем объект контроллера окна авторизации
 
-    public void init(Controller controller){
+    public void init(Controller controller) {
         this.controller = controller;
     }
 
@@ -35,11 +34,12 @@ public class WinManager {
     void openRegistrationForm() throws IOException {
 
         //выводим сообщение в нижнюю метку
-        controller.showTextInController("Для регистрации нового клиента заполните все поля");
+        controller.showTextInController("Для регистрации нового клиента заполните все поля.");
 
         try {
             Stage stage = new Stage();
-            FXMLLoader loader = FXMLLoader.load(getClass().getResource("/registration_form.fxml"));
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("registration_form.fxml"));
             Parent root = loader.load();
             registrationController = loader.getController();
             //сохраняем ссылку на контроллер открываемого окна авторизации/регистрации
@@ -52,10 +52,20 @@ public class WinManager {
             });
 
             stage.setTitle("Регистрационная форма ");
-            stage.setScene(new Scene(root, 300, 300));
+            stage.setScene(new Scene(root, 250, 200));
+            stage.isAlwaysOnTop();
+            stage.setResizable(false);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.showAndWait();
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    public RegistrationController getRegistrationController() {
+        return registrationController;
+    }
+
 }

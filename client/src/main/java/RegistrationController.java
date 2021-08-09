@@ -1,4 +1,4 @@
-import com.sun.deploy.net.DownloadException;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
@@ -16,32 +16,48 @@ public class RegistrationController {
     @FXML
     private PasswordField password;
 
-    //принимаем объект главного контроллера GUI
+    //принимаем объект главного контроллера
     private Controller backController;
+
+    private final int MIN_LOGIN_LENGTH = 5; //минимальная длина логина
+    private final int MIN_PASS_LENGTH = 8; //минимальная длина пароля
 
     /**
      * Метод отрабатывает клик кнопки на кнопку "Регистрация".
      * Открывает Авторизационную форму и запускает процесс отправки запроса на сервер
      * для регистрации в сетевом хранилище.
-     *  actionEvent - событие клик мыши
+     * actionEvent - событие клик мыши
      */
     @FXML
     public void onRegistrationButtonClick(ActionEvent actionEvent) {
-
+        //если введенные регистрационные данные корректны
+        if (isRegistrationCorrect(login.getText(), password.getText())) {
+            //выводим сообщение в метку оповещения
+            backController.showTextInController("Регистрация нового клиент...");
             //запускаем процесс регистрации в сетевом хранилище
             backController.demandRegistration(login.getText(),
                     first_name.getText(), last_name.getText(), password.getText());
         }
+    }
 
-    /*
+    private boolean isRegistrationCorrect(String login, String password) {
+        if ((password.equals("111")) && (login.equals("111"))) {
+            return true;
+        } else
+            backController.showTextInController("Некоректно введены регистрационные данные...111");
+        return false;
+    }
+
+
+    /**
      * Метод отрабатывает клик линка "Authorization" в регистрационной форме.
      * Открывает Авторизационную форму.
-     *  actionEvent - событие клик мыши
+     * actionEvent - событие клик мыши
      */
     @FXML
     public void onAuthorizationLinkClick(ActionEvent actionEvent) {
         //выводим сообщение в метку уведомлений
-        backController.getNoticeLabel().setText("Insert your login and password please.");
+        backController.getNoticeLabel().setText("Введите пожалуйста логин и паспорт");
         //очищаем все поля формы авторизации/регистрации
         clearRegistrationForm();
     }
@@ -50,7 +66,7 @@ public class RegistrationController {
     /*
      * Метод очистки полей в регистрационной/авторизационной форме.
      */
-    private void clearRegistrationForm(){
+    private void clearRegistrationForm() {
         login.setText("");
         first_name.setText("");
         last_name.setText("");
@@ -59,9 +75,9 @@ public class RegistrationController {
     /*
      * Метод закрывает окно.
      */
-    public void hideWindow(){
+    public void hideWindow() {
         //если окно показывается
-        if(globParent.getScene().getWindow().isShowing()){
+        if (globParent.getScene().getWindow().isShowing()) {
             //закрываем окно
             globParent.getScene().getWindow().hide();
         }
@@ -79,7 +95,7 @@ public class RegistrationController {
         this.backController = backController;
     }
 
-    private void showNoticeInGUI(String notice){
+    private void showNoticeInGUI(String notice) {
         backController.getNoticeLabel().setText(notice);
     }
 

@@ -1,5 +1,5 @@
 
-public class AuthMessage  extends AbstractMessage {
+public class AuthMessage extends AbstractMessage {
 
     //принимаем переменную логина пользователя
     private String login;
@@ -10,6 +10,11 @@ public class AuthMessage  extends AbstractMessage {
     //принимаем переменную пароля пользователя
     private String password;
 
+    private byte[] data;
+
+    public AuthMessage(byte[] data) {
+        this.data = data;
+    }
     public String getLogin() {
         return login;
     }
@@ -20,8 +25,8 @@ public class AuthMessage  extends AbstractMessage {
 
     public AuthMessage() {
     }
-	
-	 public String getFirst_name() {
+
+    public String getFirst_name() {
         return first_name;
     }
 
@@ -43,6 +48,6 @@ public class AuthMessage  extends AbstractMessage {
         this.password = password;
     }
 
-  
+
 }
 

@@ -3,7 +3,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox fx:id="globParent" alignment="center" spacing="5.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="RegistrationController">
+<VBox fx:id="globParent" alignment="center" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal"
+      fx:controller="RegistrationController">
     <TextField fx:id="first_name" focusTraversable="false" promptText="имя" />
     <TextField fx:id="last_name" focusTraversable="false" promptText="фамилия" />
     <TextField fx:id="login" focusTraversable="false" promptText="login" />

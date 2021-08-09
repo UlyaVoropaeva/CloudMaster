@@ -2,12 +2,18 @@
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 public class CommandManagerServer extends ChannelInboundHandlerAdapter {
     //принимаем объект соединения
     private ChannelHandlerContext ctx;
     //принимаем объект контроллера сетевого хранилища
     private final GMServer gmServer;
+
+    //принимаем объект реального пути к корневой директории пользователя в сетевом хранилище
+    private Path userStorageRoot = Paths.get("12");
 
     //объявляем переменную типа команды
     private Commands command;
@@ -18,8 +24,76 @@ public class CommandManagerServer extends ChannelInboundHandlerAdapter {
     }
 
     /**
+     * Метод в полученном объекте сообщения распознает тип команды и обрабатывает ее.
+     *
+     * @param ctx - объект соединения netty, установленного с клиентом
+     * @param msg - входящий объект сообщения
+     * @throws Exception - исключение
+     */
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        //принимаем объект соединения
+        this.ctx = ctx;
+        //инициируем из объекта сообщения объект команды
+        CommandMessage commandMessage = (CommandMessage) msg;
+        //если сюда прошли, значит клиент авторизован
+        //***блок обработки объектов сообщений(команд), полученных от клиента***
+        //выполняем операции в зависимости от типа полученного не сервисного сообщения(команды)
+        switch (commandMessage.getCommand()) {
+            //обрабатываем полученный от AuthGateway проброшенный запрос на авторизацию клиента в облачное хранилище
+            //возвращаем список объектов в корневой директорию пользователя в сетевом хранилище.
+            case SERVER_RESPONSE_AUTH_OK:
+                //вызываем метод обработки запроса от AuthGateway
+                onAuthClientRequest(commandMessage);
+                break;
+            //обрабатываем полученный от клиента запрос на отсоединение пользователя от сервера
+            //в авторизованном режиме
+            case REQUEST_SERVER_DISCONNECT:
+                //вызываем метод обработки запроса от клиента
+                onDisconnectClientRequest(commandMessage);
+                break;
+            //обрабатываем полученный от клиента запрос на загрузку(сохранение) файла в облачное хранилище
+            case REQUEST_SERVER_UPLOAD_ITEM:
+                //вызываем метод обработки запроса от клиента на загрузку целого файла клиента
+                // в директорию в сетевом хранилище.
+                onUploadItemClientRequest(commandMessage);
+                break;
+            //обрабатываем полученный от клиента запрос на загрузку(сохранение) фрагмента файла в облачное хранилище
+            case REQUEST_SERVER_UPLOAD_FILE_FRAG:
+                //вызываем метод обработки запроса от клиента на загрузку файла-фрагмента
+                //в директорию в сетевом хранилище.
+                onUploadFileFragClientRequest(commandMessage);
+                break;
+        }
+    }
+
+    /**
+     * Метод обработки запроса от клиента на загрузку целого объекта(файла) клиента
+     * в заданную директорию в сетевом хранилище.
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onUploadItemClientRequest(CommandMessage commandMessage) {
+        //вынимаем объект файлового сообщения из объекта сообщения(команды)
+        FileMessage fileMessage = (FileMessage) commandMessage.getMessageObject();
+        //если сохранение прошло удачно
+        if (gmServer.uploadItem(fileMessage, userStorageRoot)) {
+            //отправляем сообщение на сервер: подтверждение, что все прошло успешно
+            command = Commands.SERVER_RESPONSE_UPLOAD_ITEM_OK;
+            //если что-то пошло не так
+        } else {
+            //инициируем переменную типа команды(по умолчанию - ответ об ошибке)
+            command = Commands.SERVER_RESPONSE_UPLOAD_ITEM_ERROR;
+        }
+    }
+
+    private void onAuthClientRequest(CommandMessage commandMessage) {
+    }
+
+    /**
      * Метот обрабатывает событие - установление соединения с клиентом.
      * По событию отправляет сообщение-уведомление клиенту.
+     *
      * @param ctx - объект соединения netty, установленного с клиентом
      */
     @Override
@@ -35,6 +109,7 @@ public class CommandManagerServer extends ChannelInboundHandlerAdapter {
     /**
      * Метод обрабатывает полученный от клиента запрос на отсоединение пользователя
      * от сервера в авторизованном режиме.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onDisconnectClientRequest(CommandMessage commandMessage) {
@@ -45,12 +120,52 @@ public class CommandManagerServer extends ChannelInboundHandlerAdapter {
         ctx.channel().close();
     }
 
+    /**
+     * Метод обработки запроса от клиента на загрузку файла-фрагмента
+     * в директорию в сетевом хранилище.
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onUploadFileFragClientRequest(CommandMessage commandMessage) {
+        //вынимаем объект сообщения фрагмента файла из объекта сообщения(команды)
+        FileFragmentMessage fileFragMsg = (FileFragmentMessage) commandMessage.getMessageObject();
+        //если сохранение полученного фрагмента файла во временную папку сетевого хранилища прошло удачно
+        if (gmServer.uploadItemFragment(fileFragMsg, userStorageRoot)) {
+            //инициируем переменную типа команды: подтверждение, что все прошло успешно
+            command = Commands.SERVER_RESPONSE_UPLOAD_FILE_FRAG_OK;
+            //если что-то пошло не так
+        } else {
+            //выводим сообщение
+            printMsg("[server]");
+            //инициируем переменную типа команды - ответ об ошибке
+            command = Commands.SERVER_RESPONSE_UPLOAD_FILE_FRAG_ERROR;
+        }
+        //обнуляем байтовый массив в объект сообщения фрагмента файла
+        fileFragMsg.setData(null);
+        //отправляем объект сообщения(команды) клиенту
+        ctx.writeAndFlush(new CommandMessage(command, fileFragMsg));
+        //если это последний фрагмент
+        if (fileFragMsg.isFinalFileFragment()) {
+            //если корректно собран файл из фрагментов сохраненных во временную папку
+            if (gmServer.compileItemFragments(fileFragMsg, userStorageRoot)) {
+                //ответ сервера, что сборка файла из загруженных фрагментов прошла успешно
+                command = Commands.SERVER_RESPONSE_UPLOAD_FILE_FRAGS_OK;
+                //если что-то пошло не так
+            } else {
+                //инициируем переменную типа команды - ответ об ошибке
+                command = Commands.SERVER_RESPONSE_UPLOAD_FILE_FRAGS_ERROR;
+            }
+        }
+    }
+
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
     }
-    public void printMsg(String msg){
+
+    public void printMsg(String msg) {
         gmServer.printMsg(msg);
     }
 }

@@ -23,7 +23,7 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx){
+    public void channelActive(ChannelHandlerContext ctx) {
         //принимаем объект соединения
         this.ctx = ctx;
         //передаем объект соединения в объект клиента сетевого хранилища
@@ -33,7 +33,7 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
     /**
      * Метод отрабатываем событие получение объекта сообщения.
      * Преобразует объект сообщения в объект команды и запускает его обработку.
-     *  ctx - объект сетевого соединения
+     * ctx - объект сетевого соединения
      * msgObject - объект сообщения
      */
     @Override
@@ -44,14 +44,14 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
 
             //распознаем и обрабатываем полученный объект сообщения(команды)
             recognizeAndArrangeMessageObject(commandMessage);
-        }
-        finally {
+        } finally {
             ReferenceCountUtil.release(msgObject);
         }
     }
 
-     /**
+    /**
      * Метод распознает тип команды и обрабатывает ее.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     public void recognizeAndArrangeMessageObject(CommandMessage commandMessage) {
@@ -72,74 +72,148 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
                 //вызываем метод обработки ответа сервера
                 onServerDisconnectErrorServerResponse(commandMessage);
                 break;
-				
             //обрабатываем полученное от сервера подтверждение успешной регистрации
             // нового пользователя в облачное хранилище
             case SERVER_RESPONSE_REGISTRATION_OK:
                 //вызываем метод обработки ответа сервера
                 onRegistrationOKServerResponse(commandMessage);
                 break;
-			//обрабатываем полученное от сервера сообщение об ошибке регистрации в облачное хранилище
-            case SERVER_RESPONSE_REGISTRATION_ERROR:
-                //вызываем метод обработки ответа сервера
-                onRegistrationErrorServerResponse(commandMessage);
-                break;
-				
             //обрабатываем полученное от сервера подтверждение успешной авторизации в облачное хранилище
             case SERVER_RESPONSE_AUTH_OK:
                 //вызываем метод обработки ответа сервера
                 onAuthOKServerResponse(commandMessage);
                 break;
-            
+            case SERVER_RESPONSE_UPLOAD_ITEM_OK:
+                //обрабатываем полученное от сервера подтверждение успешной загрузки(сохранении)
+                // всего большого файла(по фрагментно) в облачное хранилище
+            case SERVER_RESPONSE_UPLOAD_FILE_FRAGS_OK:
+
+                //обрабатываем полученное от сервера сообщение об ошибке регистрации в облачное хранилище
+            case SERVER_RESPONSE_REGISTRATION_ERROR:
+                //вызываем метод обработки ответа сервера
+                onRegistrationErrorServerResponse(commandMessage);
+                break;
             //обрабатываем полученное от сервера сообщение об ошибке авторизации в облачное хранилище
             case SERVER_RESPONSE_AUTH_ERROR:
                 //вызываем метод обработки ответа сервера
                 onAuthErrorServerResponse(commandMessage);
                 break;
+            //обрабатываем полученное от сервера сообщение об ошибке загрузки(сохранения)
+            // файла в облачное хранилище
+            case SERVER_RESPONSE_UPLOAD_ITEM_ERROR:
+                //вызываем метод обработки ответа сервера
+                onUploadItemErrorServerResponse(commandMessage);
+                break;
+            //обрабатываем полученное от сервера подтверждение успешной загрузки(сохранении)
+            // фрагмента файла в облачное хранилище
+            case SERVER_RESPONSE_UPLOAD_FILE_FRAG_OK:
+                //вызываем метод обработки ответа сервера
+                onUploadFileFragOkServerResponse(commandMessage);
+                break;
+            //обрабатываем полученное от сервера сообщение об ошибке загрузки(сохранения)
+            // фрагмента файла в облачное хранилище
+            case SERVER_RESPONSE_UPLOAD_FILE_FRAG_ERROR:
+                //вызываем метод обработки ответа сервера
+                onUploadFileFragErrorServerResponse(commandMessage);
+                break;
         }
     }
 
+    /**
+     * Метод обрабатывает полученное от сервера сообщение
+     * об ошибке загрузки(сохранения) фрагмента файла в облачное хранилище.
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onUploadFileFragErrorServerResponse(CommandMessage commandMessage) {
+        //вынимаем объект сообщения фрагмента файла из объекта сообщения(команды)
+        FileFragmentMessage fileFragMsg = (FileFragmentMessage) commandMessage.getMessageObject();
+        //выводим сообщение в лог
+        storageClient.showTextInController("[client]CommandMessageManager.onUploadFileFragErrorServerResponse() - " +
+                "Ошибка загрузки фрагмента: " + fileFragMsg.getCurrentFragNumber() +
+                "/" + fileFragMsg.getTotalFragsNumber());
+        //повторяем отправку на загрузку этого фрагмента заново
+        storageClient.sendFileFragment(fileFragMsg, Commands.REQUEST_SERVER_UPLOAD_FILE_FRAG);
+    }
 
-/**
+    /**
+     * Метод обрабатывает полученное от сервера подтверждение
+     * успешной загрузки(сохранении) фрагмента файла в облачное хранилище.
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onUploadFileFragOkServerResponse(CommandMessage commandMessage) {
+        //вынимаем объект сообщения фрагмента файла из объекта сообщения(команды)
+        FileFragmentMessage fileFragMsg = (FileFragmentMessage) commandMessage.getMessageObject();
+        //выводим сообщение
+        storageClient.showTextInController("[client]CommandMessageManager.onUploadFileFragOkServerResponse() - " +
+                "загрузка фрагмента: " + fileFragMsg.getCurrentFragNumber() +
+                "/" + fileFragMsg.getTotalFragsNumber());
+        //выводим в GUI информацию с номером загруженного фрагмента файла
+        storageClient.showTextInController("Загрузка файла. завершен фрагмент: " +
+                fileFragMsg.getCurrentFragNumber() +
+                "/" + fileFragMsg.getTotalFragsNumber());
+
+        //если это финальный фрагмент
+        if (fileFragMsg.getCurrentFragNumber() == fileFragMsg.getTotalFragsNumber()) {
+            //выводим в GUI информацию о компиляции итогового файла из фрагментов в сетевом хранилише
+            storageClient.showTextInController("загрузка всего файла ...");
+        }
+    }
+
+    /**
+     * Метод обрабатывает полученное от сервера сообщение об ошибке загрузки(сохранения)
+     * объекта элемента(файла) в облачное хранилище
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+
+    private void onUploadItemErrorServerResponse(CommandMessage commandMessage) {
+        storageClient.showTextInController("[client]CommandMessageManager.onUploadFileErrorServerResponse() command: " + commandMessage.getCommand());
+    }
+
+
+    /**
      * Метод обрабатывает полученное от сервера подтверждение успешного подключения клиента
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onServerConnectedResponse(CommandMessage commandMessage) {
-        //открываем окно авторизации
-        controller.openAuthWindowInController();
-        //устанавливаем режим отображения GUI "Подключен"
+
+        //устанавливаем режим отображения "Подключен"
         controller.setDisconnectedMode(false);
     }
     /**
      * Метод обрабатывает полученное от сервера подтверждение готовности отключения клиента.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onServerDisconnectOKServerResponse(CommandMessage commandMessage) {
-        //запускаем процесс отключения от сервера и переход в автономный режим или закрытия приложения
-        showTextInController("The disconnecting from server is allowed!");
         //запускаем процесс отключения от сервера
         storageClient.disconnect();
         //выводим текст в метку
-        showTextInController("Server disconnected. Press \"Connect to the Cloud Storage\" button.");
+        showTextInController("Сервер отключен.");
 
     }
 
     /**
      * Метод обрабатывает полученное от сервера сообщение об ошибке при попытке отключения клиента.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onServerDisconnectErrorServerResponse(CommandMessage commandMessage) {
-        showTextInController("The disconnecting from server is not allowed!");
+        showTextInController(" полученно от сервера сообщение об ошибке при попытке отключения клиента...");
     }
 
     /**
      * Метод обрабатывает полученное от сервера подтверждение успешной регистрации
      * нового пользователя в облачное хранилище.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onRegistrationOKServerResponse(CommandMessage commandMessage) {
         //выводим сообщение в метку уведомлений
-        showTextInController("You have registered in the Cloud Storage. Press \"Authorization\" button.");
+        showTextInController("полученно от сервера подтверждение успешной регистрации");
         //закрываем регистрационное окно и открываем авторизационное окно
         controller.setRegisteredAndUnauthorisedMode();
     }
@@ -147,20 +221,23 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
     /**
      * Метод обрабатывает полученное от сервера сообщение об ошибке регистрации
      * нового пользователя в облачное хранилище.
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onRegistrationErrorServerResponse(CommandMessage commandMessage) {
         //выводим сообщение в нижнюю метку
-        showTextInController("Probably this login has been registered before! Try again.");
+        controller.setAuthorizedMode(true);
+        showTextInController("полученно от сервера сообщение об ошибке регистрации...");
     }
 
     /**
      * Метод обрабатывает полученное от сервера подтверждение успешной авторизации в облачное хранилище
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onAuthOKServerResponse(CommandMessage commandMessage) {
         //устанавливаем режим отображения "Авторизован"
-        controller.setAuthorizedMode(true);
+        //controller.setAuthorizedMode(true);
         //выводим в список файлов и папок в корневой пользовательской директории в сетевом хранилище
         updateStorageItemListInController(commandMessage);
     }
@@ -171,18 +248,20 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
 
     /**
      * Метод обрабатывает полученное от сервера сообщение об ошибке авторизации в облачное хранилище
+     *
      * @param commandMessage - объект сообщения(команды)
      */
     private void onAuthErrorServerResponse(CommandMessage commandMessage) {
         //выводим сообщение в нижнюю метку GUI
         showTextInController("Ошибка: клиент с таким логином и паролем не существует ");
     }
-	
-	  /**
+
+    /**
      * Метод выводит сообщение в нижнюю метку GUI
+     *
      * @param text - сообщение
      */
-    public void showTextInController(String text){
+    public void showTextInController(String text) {
         //выводим сообщение в нижнюю метку GUI
         controller.showTextInController(text);
     }
