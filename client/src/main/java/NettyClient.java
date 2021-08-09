@@ -33,27 +33,27 @@ public class NettyClient {
                     //Указываем использование класса NioSocketChannel для создания канала после того,
                     //как установлено входящее соединение
                     .channel(NioSocketChannel.class);
-                    //настраиваем опции для обрабатываемых каналов(клиентских соединений)
-                    b.option(ChannelOption.SO_KEEPALIVE, true);
+            //настраиваем опции для обрабатываемых каналов(клиентских соединений)
+            b.option(ChannelOption.SO_KEEPALIVE, true);
             //Указываем обработчики, которые будем использовать для открытого канала.
             //ChannelInitializer помогает пользователю сконфигурировать новый канал
 
             b.handler(new ChannelInitializer<SocketChannel>() {
                 protected void initChannel(SocketChannel socketChannel)/* throws Exception*/ {
-                //наполняем трубу обработчиками сообщений(потоков данных)
-                socketChannel.pipeline().addLast(
-                    //десериализатор netty входящего потока байтов в объект сообщения
-                    new ObjectDecoder(50 * 1024 * 1024, ClassResolvers.cacheDisabled(null)),
-                    //сериализатор netty объекта сообщения в исходящих поток байтов
-                    new ObjectEncoder(),
-                    //инициируем объект входящего обработчика объектов сообщений(команд)
-                    new NettyServerDecoder(storageClient)
+                    //наполняем трубу обработчиками сообщений(потоков данных)
+                    socketChannel.pipeline().addLast(
+                            //десериализатор netty входящего потока байтов в объект сообщения
+                            new ObjectDecoder(50 * 1024 * 1024, ClassResolvers.cacheDisabled(null)),
+                            //сериализатор netty объекта сообщения в исходящих поток байтов
+                            new ObjectEncoder(),
+                            //инициируем объект входящего обработчика объектов сообщений(команд)
+                            new NettyServerDecoder(storageClient)
                     );
                 }
             });
             //устанавливаем подключение к серверу и начинаем принимать входящие сообщения
             ChannelFuture future;
-            future = b.connect("localhost",PORT).sync();
+            future = b.connect("localhost", PORT).sync();
             //если соединение установлено
             onConnectionReady(future);
 
@@ -63,11 +63,12 @@ public class NettyClient {
             workerGroup.shutdownGracefully();
         }
     }
+
     public void onConnectionReady(ChannelFuture future) {
         printMsg("Waiting for the server answer...");
     }
 
-    public void printMsg(String msg){
+    public void printMsg(String msg) {
         storageClient.showTextInController(msg);
     }
 

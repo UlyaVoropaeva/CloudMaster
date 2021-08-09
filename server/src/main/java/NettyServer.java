@@ -27,7 +27,6 @@ public class NettyServer {
         NioEventLoopGroup mainGroup = new NioEventLoopGroup(1);
         //инициируем пул потоков для обработки потоков данных от клиентов
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
-
         try {
             //позволяет настроить сервер перед запуском
             ServerBootstrap b = new ServerBootstrap();
@@ -41,7 +40,7 @@ public class NettyServer {
                     //ChannelInitializer ( - принимает запросы) помогает сконфигурировать как будем обрабатывать входящие сообщения от клиента
                     .childHandler(new ChannelInitializer<NioSocketChannel>() {
                         //
-                        protected void initChannel(NioSocketChannel nioSocketChannel)  {
+                        protected void initChannel(NioSocketChannel nioSocketChannel) {
                             //прописываем набор "преобразователей"
                             nioSocketChannel.pipeline().addLast(
                                     //десериализатор netty входящего потока байтов в объект сообщения
@@ -73,7 +72,7 @@ public class NettyServer {
         printMsg("Сервер ждет нового клиента...");
     }
 
-    public void printMsg(String msg){
+    public void printMsg(String msg) {
         gmServer.printMsg(msg);
     }
 
