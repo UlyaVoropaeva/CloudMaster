@@ -4,7 +4,11 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
+import org.apache.commons.io.FilenameUtils;
+
 public class FileInfo {
+
+
     public enum FileType {
         FILE("F"), DIRECTORY("D");
 
@@ -13,10 +17,12 @@ public class FileInfo {
         public String getName() {
             return name;
         }
+
         FileType(String name) {
             this.name = name;
         }
     }
+
     //полное имя файла
     private String fullfilename;
     //имя файла
@@ -34,17 +40,18 @@ public class FileInfo {
         return fullfilename;
     }
 
-    public void setFullFilename(String fullfilename) {
-        this.fullfilename = fullfilename;
+    public String getFileName() {
+        return filename;
     }
 
-    public String getFilename() {
-        return filename;
+    public void setFullFilename(String fullfilename) {
+        this.fullfilename = fullfilename;
     }
 
     public void setFilename(String filename) {
         this.filename = filename;
     }
+
 
     public String getExtension() {
         return extension;
@@ -74,6 +81,7 @@ public class FileInfo {
         return lastModified;
     }
 
+
     public void setLastModified(LocalDateTime lastModified) {
         this.lastModified = lastModified;
     }
@@ -100,18 +108,23 @@ public class FileInfo {
     //	Получаем полное имя файла и преобразуем в стринг
     private String getFileNameFull(Path path) {
         String fullFileName = path.getFileName().toString();
-        return fullFileName;
+        if (FilenameUtils.getName(fullFileName) == null) {
+            return null;
+        }
+        return FilenameUtils.getName(fullFileName);
         //Получает имя за вычетом пути из полного имени файла и проверяем
     }
 
     //получаем имя файла и  удаляем расширение из имени файла.
     public String getFileNameRemoveExtension(Path path) {
         String fullFileName = path.getFileName().toString();
-
+        if (FilenameUtils.removeExtension(fullFileName) == null) {
+            return null;
+        }
         if (Files.isDirectory(path)) {
             return fullFileName;
         }
-        return null;
+        return FilenameUtils.removeExtension(fullFileName);
     }
 
     //получаем расширение файла
@@ -122,4 +135,5 @@ public class FileInfo {
         }
         return fullFileName;
     }
+
 }

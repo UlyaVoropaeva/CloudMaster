@@ -7,42 +7,38 @@
 <?import javafx.scene.text.Font?>
 <VBox alignment="center" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal"
       fx:controller="Controller">
+
+
     <MenuBar>
         <Menu text="Файл">
-            <MenuItem text="Выйти из программы" onAction="#btnExitAction"/>
+            <MenuItem text="Выйти из программы" onAction="#onDisconnectClick"/>
         </Menu>
-        <Menu text="Состояние подключения">
-            <MenuItem text="Подключится" onAction = "#onConnectButtonClick"/>
-            <MenuItem text="Отключится" onAction="#onDisconnectClick"/>
-        </Menu>
-    </MenuBar>
-    <HBox spacing="2"  fx:id="connectPanel">
 
-        <TextField fx:id="loginField" promptText="Логин" HBox.hgrow="ALWAYS" />
-        <PasswordField fx:id="passField"  promptText="Пароль" HBox.hgrow="ALWAYS" />
-        <Button  text="Авторизоваться" />
-        <Button  text="Регистрация нового пользователя"  HBox.hgrow="ALWAYS" onAction="#onRegistrationBtnClick" >
+    </MenuBar>
+    <HBox spacing="2" fx:id="connectPanel">
+
+        <Button text="Подключится" onAction="#onConnectButtonClick"/>
+        <Button text="Отключится" onAction="#onDisconnectClick"/>
+        <Button text="Регистрация" HBox.hgrow="ALWAYS" onAction="#onRegistrationBtnClick"/>
+        <Button text="Авторизация" HBox.hgrow="ALWAYS" onAction="#onAuthorizationLinkClick">
         </Button>
 
     </HBox>
-    <HBox VBox.vgrow="ALWAYS">
-            <fx:include fx:id="leftPanel" source="panelLocal.fxml" HBox.hgrow="ALWAYS" />
-            <fx:include fx:id="rightPanel" source="panelCloud.fxml" HBox.hgrow="ALWAYS" />
-    </HBox>
 
-    <HBox spacing="5">
+    <VBox alignment="center" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal">
+        <HBox>
+            <ComboBox fx:id="disksBox" onAction="#selectDiskAction"/>
+            <TextField fx:id="pathField" editable="false" HBox.hgrow="ALWAYS"/>
+            <Button text="Вверх" onAction="#btnPathUpAction"/>
+        </HBox>
+        <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"/>
+        <fx:include fx:id="rightPanel" source="panelCloud.fxml" HBox.hgrow="ALWAYS"/>
 
-        <Button maxWidth="Infinity" focusTraversable="false" text="Периименовать" HBox.hgrow="ALWAYS" onAction="#renameBtnAction"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Загрузить в облачное хранилище" HBox.hgrow="ALWAYS" onAction="#uploadBtnAction"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Скачать из облачного хранилища" HBox.hgrow="ALWAYS" onAction="#downloadBtnAction"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Удалить" HBox.hgrow="ALWAYS" onAction="#deleteBtnAction"/>
-        <Button maxWidth="Infinity" focusTraversable="false" text="Выход" HBox.hgrow="ALWAYS" onAction="#btnExitAction"/>
-        <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-        </padding>
-    </HBox>
-    <Label fx:id="noticeLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="Infinity" style="-fx-background-color: #FFF;" textAlignment="CENTER">
+    </VBox>
+    <Label fx:id="noticeLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="Infinity"
+           style="-fx-background-color: #FFF;" textAlignment="CENTER">
         <font>
-            <Font size="18.0" />
-        </font></Label>
+            <Font size="18.0"/>
+        </font>
+    </Label>
 </VBox>
