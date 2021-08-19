@@ -19,9 +19,6 @@ public class RegistrationController {
     //принимаем объект главного контроллера
     private Controller backController;
 
-    private final int MIN_LOGIN_LENGTH = 5; //минимальная длина логина
-    private final int MIN_PASS_LENGTH = 8; //минимальная длина пароля
-
     /**
      * Метод отрабатывает клик кнопки на кнопку "Регистрация".
      * Открывает Авторизационную форму и запускает процесс отправки запроса на сервер
@@ -37,29 +34,19 @@ public class RegistrationController {
             //запускаем процесс регистрации в сетевом хранилище
             backController.demandRegistration(login.getText(),
                     first_name.getText(), last_name.getText(), password.getText());
+            //очищаем все поля формы авторизации/регистрации
+            clearRegistrationForm();
         }
     }
 
     private boolean isRegistrationCorrect(String login, String password) {
-        if ((password.equals("111")) && (login.equals("111"))) {
+        if ((password.equals(" ")) && (login.equals(" "))) {
             return true;
         } else
-            backController.showTextInController("Некоректно введены регистрационные данные...111");
+            //очищаем все поля формы авторизации/регистрации
+            clearRegistrationForm();
+        backController.showTextInController("Некоректно введены регистрационные данные...111");
         return false;
-    }
-
-
-    /**
-     * Метод отрабатывает клик линка "Authorization" в регистрационной форме.
-     * Открывает Авторизационную форму.
-     * actionEvent - событие клик мыши
-     */
-    @FXML
-    public void onAuthorizationLinkClick(ActionEvent actionEvent) {
-        //выводим сообщение в метку уведомлений
-        backController.getNoticeLabel().setText("Введите пожалуйста логин и паспорт");
-        //очищаем все поля формы авторизации/регистрации
-        clearRegistrationForm();
     }
 
 
@@ -72,7 +59,8 @@ public class RegistrationController {
         last_name.setText("");
         password.setText("");
     }
-    /*
+
+    /**
      * Метод закрывает окно.
      */
     public void hideWindow() {

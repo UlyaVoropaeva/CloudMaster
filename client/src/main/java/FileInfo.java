@@ -3,10 +3,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
 import org.apache.commons.io.FilenameUtils;
 
 public class FileInfo {
-
 
 
     public enum FileType {
@@ -17,10 +17,12 @@ public class FileInfo {
         public String getName() {
             return name;
         }
+
         FileType(String name) {
             this.name = name;
         }
     }
+
     //полное имя файла
     private String fullfilename;
     //имя файла
@@ -37,6 +39,7 @@ public class FileInfo {
     public String getFullFilename() {
         return fullfilename;
     }
+
     public String getFileName() {
         return filename;
     }
@@ -105,7 +108,7 @@ public class FileInfo {
     //	Получаем полное имя файла и преобразуем в стринг
     private String getFileNameFull(Path path) {
         String fullFileName = path.getFileName().toString();
-        if (FilenameUtils.getName(fullFileName) == null){
+        if (FilenameUtils.getName(fullFileName) == null) {
             return null;
         }
         return FilenameUtils.getName(fullFileName);
@@ -115,10 +118,10 @@ public class FileInfo {
     //получаем имя файла и  удаляем расширение из имени файла.
     public String getFileNameRemoveExtension(Path path) {
         String fullFileName = path.getFileName().toString();
-        if (FilenameUtils.removeExtension(fullFileName) == null){
+        if (FilenameUtils.removeExtension(fullFileName) == null) {
             return null;
         }
-        if(Files.isDirectory(path)){
+        if (Files.isDirectory(path)) {
             return fullFileName;
         }
         return FilenameUtils.removeExtension(fullFileName);

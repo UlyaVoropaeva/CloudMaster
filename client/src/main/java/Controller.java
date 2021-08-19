@@ -12,10 +12,7 @@ import javafx.scene.layout.HBox;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
@@ -43,6 +40,7 @@ public class Controller implements Initializable {
     //Класс TextField совершает управление интерфейса пользователя, который принимает и отображает ввход текста.
     TextField pathField;
 
+
     //инициируем константу строки названия директории по умолчанию относительно корневой директории
     // для списка в клиентской части
     private final String CLIENT_DEFAULT_DIR = "";
@@ -53,16 +51,21 @@ public class Controller implements Initializable {
     private ContextMenu clientContextMenu = new ContextMenu();
     //объявляем объект менеджера окон
     private static WinManager winManager;
+    private CloudPanelController cloudPanelController;
 
     //объявляем объект контроллера клиента облачного хранилища
     private GMClient storageClient;
 
     //объявляем объекты текущей папки списка объектов элемента в клиентской и серверной части GUI
-    private FileInfo clientCurrentDirItem, storageCurrentDirItem;
+    private FileInfo clientCurrentDirItem;
+    private FileInfo storageCurrentDirItem;
     //объявляем объекты директории по умолчанию в клиентской и серверной части GUI
-    FileInfo clientDefaultDirItem;
-    FileInfo storageDefaultDirItem;
+    private FileInfo clientDefaultDirItem;
+    private FileInfo storageDefaultDirItem;
 
+    public void btnExitAction(ActionEvent actionEvent) {
+        Platform.exit();
+    }
 
     @Override
 
@@ -82,11 +85,12 @@ public class Controller implements Initializable {
         //инициируем объекты директории по умолчанию в клиентской и серверной части
         clientDefaultDirItem = new FileInfo(Paths.get(CLIENT_DEFAULT_DIR));
         storageDefaultDirItem = new FileInfo(Paths.get(STORAGE_DEFAULT_DIR));
+        clientItemListView();
+        serverItemListView(location, resources);
+    }
 
-
-
+    private void clientItemListView() {
         setClientContextMenu(filesTable, clientContextMenu);
-
 
         // создаем таблицу
         TableColumn<FileInfo, String> filenameColumn = new TableColumn<>("Имя");
@@ -141,7 +145,6 @@ public class Controller implements Initializable {
                 if (event.getButton().name().equals("PRIMARY")) {
                     //если контекстное меню показывается
                     if (event.getClickCount() == 1) {
-                        setContextMenu(filesTable, clientContextMenu);
                         if (clientContextMenu.isShowing()) {
                             //закрываем контекстное меню
                             clientContextMenu.hide();
@@ -160,6 +163,7 @@ public class Controller implements Initializable {
         });
 
         updateFilesList(Paths.get("."));
+
     }
 
     @FXML
@@ -193,14 +197,17 @@ public class Controller implements Initializable {
 
         //если авторизация получена
         if (isAuthMode) {
-            if (isAuthMode) {
-                //если объект контроллера регистрации не нулевой
-                if (winManager.getRegistrationController() != null) {
-                    //закрываем окно формы в потоке JavaFX
-                    Platform.runLater(() -> winManager.getRegistrationController().hideWindow());
-                }
-
+            //если объект контроллера регистрации не нулевой
+            if (winManager.getRegistrationController() != null) {
+                //закрываем окно формы в потоке JavaFX
+                Platform.runLater(() -> winManager.getRegistrationController().hideWindow());
             }
+            //если объект контроллера авторизации не нулевой
+            if (winManager.getAuthorisationController() != null) {
+                //закрываем окно формы в потоке JavaFX
+                Platform.runLater(() -> winManager.getAuthorisationController().hideWindow());
+            }
+
         }
     }
 
@@ -214,6 +221,17 @@ public class Controller implements Initializable {
      */
     public void demandRegistration(String login, String first_name, String last_name, String password) {
         storageClient.demandRegistration(login, first_name, last_name, password);
+    }
+
+    /**
+     * Метод-прокладка запускает процесс показа основного окна и процесс
+     * авторизации пользователя в сетевом хранилище.
+     *
+     * @param login    - логин пользователя
+     * @param password - пароль пользователя
+     */
+    public void demandAuthorisation(String login, String password) {
+        storageClient.demandAuthorization(login, password);
     }
 
     public Label getNoticeLabel() {
@@ -239,25 +257,25 @@ public class Controller implements Initializable {
     }
 
 
-    public void onRegistrationBtnClick(ActionEvent actionEvent) throws IOException {
-        //инициируем объект менеджера окон
-        winManager = WinManager.getInstance();
-        //передаем ему настройки
-        winManager.init(Controller.this);
-        winManager.openRegistrationForm();
-        if (winManager.getRegistrationController() != null) {
-            //закрываем окно формы в потоке JavaFX
-            Platform.runLater(() -> winManager.getRegistrationController().hideWindow());
+    /**
+     * Метод устанавливает режим отображения GUI "Отсоединен" или "Подсоединен".
+     *
+     * @param isDisconnectedMode - если true - "Отсоединен"
+     */
+    public void setDisconnectedMode(boolean isDisconnectedMode) {
+
+
+        //если установлен режим соединен
+        if (!isDisconnectedMode) {
+
+            showTextInController("Connect");
+        } else {
+
+            showTextInController("Disconnect");
         }
-    }
-
-    public void setDisconnectedMode(boolean b) {
 
     }
 
-    public void setRegisteredAndUnauthorisedMode() {
-
-    }
 
     //Производим обнавление списока файлов
     public void updateFilesList(Path path) {
@@ -284,18 +302,7 @@ public class Controller implements Initializable {
         updateFilesList(Paths.get(element.getSelectionModel().getSelectedItem()));
     }
 
-    public String getSelectedFilename() {
-        if (!filesTable.isFocused()) {
-            return null;
-        }
-        return filesTable.getSelectionModel().getSelectedItem().getFullFilename();
-    }
-
-    public String getCurrentPath() {
-        return pathField.getText();
-    }
-
-    public String get_size(long bytes) {
+    public static String get_size(long bytes) {
         if (bytes < 1000) {
             return String.format("%,d bytes", bytes);
         } else if (bytes < 1000 * Math.pow(2, 10)) {
@@ -309,41 +316,24 @@ public class Controller implements Initializable {
         }
         return "n/a";
     }
-
+    public void serverItemListView(URL location, ResourceBundle resources) {
+        Platform.runLater(() -> {
+           cloudPanelController.initialize(location, resources);
+        });
+    }
 
     /**
      * Метод инициирует контекстное меню для листвью клиента.
      *
-     * @param filesTable- коллекция объектов элемента
+     * @param filesTable  - коллекция объектов элемента
      * @param contextMenu - объект контекстного меню
      */
     private void setClientContextMenu(TableView<FileInfo> filesTable, ContextMenu contextMenu) {
         // добавляем скопом элементы в контестное меню
-        contextMenu.getItems().addAll(menuItemUpload(filesTable),
-                menuItemRename(filesTable), menuItemDelete(filesTable));
+        contextMenu.getItems().addAll(menuItemUpload(filesTable));
 
         //устанавливаем настройки контектстного меню
         setContextMenu(filesTable, contextMenu);
-    }
-
-    /**
-     * Метод инициирует элемент контекстного меню "Удалить"
-     *
-     * @param filesTable - текущий список объектов элемента
-     * @return - объект элемента контекстного меню "Delete"
-     */
-    private MenuItem menuItemDelete(TableView<FileInfo> filesTable) {
-        //инициируем пункт контекстного меню "Удалить"
-        MenuItem menuItemDelete = new MenuItem("Delete");
-        //устанавливаем обработчика нажатия на этот пункт контекстного меню
-        menuItemDelete.setOnAction(event -> {
-            //запоминаем выбранный элемент списка
-            FileInfo fileInfo = filesTable.getSelectionModel().getSelectedItem();
-
-            //сбрасываем выделение после действия
-            filesTable.getSelectionModel().clearSelection();
-        });
-        return menuItemDelete;
     }
 
 
@@ -382,12 +372,12 @@ public class Controller implements Initializable {
         //устанавливаем обработчика нажатия на этот пункт контекстного меню
         menuItemUpload.setOnAction(event -> {
             //запоминаем кликнутый элемент списка
-            FileInfo item = filesTable.getSelectionModel().getSelectedItem();
+            FileInfo fileInfo = filesTable.getSelectionModel().getSelectedItem();
             try {
                 //выводим сообщение в нижнюю метку
                 showTextInController("Загрузка файла...");
                 //отправляем на сервер запрос на загрузку файла в облачное хранилище
-                storageClient.demandUploadItem(storageCurrentDirItem, item);
+                storageClient.demandUploadItem(storageDefaultDirItem, fileInfo);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -397,46 +387,55 @@ public class Controller implements Initializable {
         return menuItemUpload;
     }
 
-    /**
-     * Метод инициирует элемент контекстного меню "Скачать из облачного хранилища"
-     *
-     * @param filesTable - текущий список объектов элемента
-     * @return - объект элемента контекстного меню "Download"
-     */
-    private MenuItem menuItemDownload(TableView<FileInfo> filesTable) {
-        //инициируем пункт контекстного меню "Скачать из облачного хранилища"
-        MenuItem menuItemDownload = new MenuItem("Скачать");
-        //устанавливаем обработчика нажатия на этот пункт контекстного меню
-        menuItemDownload.setOnAction(event -> {
-            //запоминаем кликнутый элемент списка
-            FileInfo FileInfo = filesTable.getSelectionModel().getSelectedItem();
-            //выводим сообщение в нижнюю метку
-            showTextInController("Загрузка файла. А ожидание ответа от сервера...");
 
-            //сбрасываем выделение после действия
-            filesTable.getSelectionModel().clearSelection();
-        });
-        return menuItemDownload;
-    }
-
-    /**
-     * Метод инициирует элемент контекстного меню "Переименовать"
-     *
-     * @param filesTable - текущий список объектов элемента
-     * @return - объект элемента контекстного меню "Rename"
-     */
-    private MenuItem menuItemRename(TableView<FileInfo> filesTable) {
-        //инициируем пункт контекстного меню "Переименовать"
-        MenuItem menuItemRename = new MenuItem("Переименовать");
-        //устанавливаем обработчика нажатия на этот пункт контекстного меню
-        menuItemRename.setOnAction(event -> {
-            //запоминаем выбранный элемент списка
-            FileInfo origin = filesTable.getSelectionModel().getSelectedItem();
-
-        });
-        return menuItemRename;
-    }
-    public void btnExitAction(ActionEvent actionEvent) {
+    //Метод отправки запроса об отключении на сервер
+    public void dispose() {
+        //запускаем процесс отправки запроса серверу на разрыв соединения
+        storageClient.demandDisconnect();
         Platform.exit();
+
     }
+
+    /**
+     * Метод-прокладка, чтобы открывать окно GUI в других потоках
+     */
+    public void openAuthWindowInGUI() {
+        //в отдельном потоке запускаем обновление интерфейса
+        //открываем окно авторизации
+        Platform.runLater(() -> winManager.openAuthorisationWindow());
+    }
+
+    /**
+     * Метод отрабатывает клик Авторизации .
+     * Открывает Авторизационную форму.
+     * actionEvent - событие клик мыши
+     */
+    @FXML
+    public void onAuthorizationLinkClick(ActionEvent actionEvent) {
+        //переходим в режим авторизации
+        setAuthorizationFormMode();
+    }
+    /**
+     * Метод открывает окно авторизации.
+     */
+    public void setAuthorizationFormMode() {
+        //если объект контроллера регистрации не нулевой
+        if(winManager.getRegistrationController() != null){
+            //закрываем окно формы в потоке JavaFX
+            Platform.runLater(() -> winManager.getRegistrationController().hideWindow());
+        }
+        //открываем окно авторизации с пустыми логином и паролем
+        winManager.openAuthorisationWindow();
+    }
+
+    public void onRegistrationBtnClick(ActionEvent actionEvent) {
+
+        winManager.openRegistrationForm();
+        if (winManager.getRegistrationController() != null) {
+            //закрываем окно формы в потоке JavaFX
+            Platform.runLater(() -> winManager.getRegistrationController().hideWindow());
+
+        }
+    }
+
 }

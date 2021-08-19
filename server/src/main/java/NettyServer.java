@@ -46,7 +46,8 @@ public class NettyServer {
                                     new ObjectDecoder(50 * 1024 * 1024, ClassResolvers.cacheDisabled(null)),
                                     //сериализатор netty объекта сообщения в исходящии поток байтов
                                     new ObjectEncoder(),
-
+                                    //входящий обработчик объектов-сообщений(команд) на авторизацию клиента(пользователя)
+                                    new AuthGateway(gmServer),
                                     //входящий обработчик объектов-сообщений(команд) по управлению сетевым хранилищем
                                     new CommandManagerServer(gmServer)
                             );

@@ -7,21 +7,20 @@
 <?import javafx.scene.text.Font?>
 <VBox alignment="center" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/10.0.2-internal"
       fx:controller="Controller">
+
+
     <MenuBar>
         <Menu text="Файл">
-            <MenuItem text="Выйти из программы" onAction="#btnExitAction"/>
+            <MenuItem text="Выйти из программы" onAction="#onDisconnectClick"/>
         </Menu>
-        <Menu text="Состояние подключения">
-            <MenuItem text="Подключится" onAction = "#onConnectButtonClick"/>
-            <MenuItem text="Отключится" onAction="#onDisconnectClick"/>
-        </Menu>
-    </MenuBar>
-    <HBox spacing="2"  fx:id="connectPanel">
 
-        <TextField fx:id="loginField"  promptText="Логин" HBox.hgrow="ALWAYS" />
-        <PasswordField fx:id="passField"   promptText="Пароль" HBox.hgrow="ALWAYS" />
-        <Button  text="Авторизоваться" />
-        <Button  text="Регистрация нового пользователя"  HBox.hgrow="ALWAYS" onAction="#onRegistrationBtnClick" >
+    </MenuBar>
+    <HBox spacing="2" fx:id="connectPanel">
+
+        <Button text="Подключится" onAction="#onConnectButtonClick"/>
+        <Button text="Отключится" onAction="#onDisconnectClick"/>
+        <Button text="Регистрация" HBox.hgrow="ALWAYS" onAction="#onRegistrationBtnClick"/>
+        <Button text="Авторизация" HBox.hgrow="ALWAYS" onAction="#onAuthorizationLinkClick">
         </Button>
 
     </HBox>
@@ -32,14 +31,14 @@
             <TextField fx:id="pathField" editable="false" HBox.hgrow="ALWAYS"/>
             <Button text="Вверх" onAction="#btnPathUpAction"/>
         </HBox>
-        <TableView fx:id="filesTable" VBox.vgrow="ALWAYS" />
-        <fx:include fx:id="rightPanel" source="panelCloud.fxml" HBox.hgrow="ALWAYS" />
+        <TableView fx:id="filesTable" VBox.vgrow="ALWAYS"/>
+        <fx:include fx:id="rightPanel" source="panelCloud.fxml" HBox.hgrow="ALWAYS"/>
 
     </VBox>
-
-
-    <Label fx:id="noticeLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="Infinity" style="-fx-background-color: #FFF;" textAlignment="CENTER">
+    <Label fx:id="noticeLabel" alignment="CENTER" contentDisplay="CENTER" maxWidth="Infinity"
+           style="-fx-background-color: #FFF;" textAlignment="CENTER">
         <font>
-            <Font size="18.0" />
-        </font></Label>
+            <Font size="18.0"/>
+        </font>
+    </Label>
 </VBox>

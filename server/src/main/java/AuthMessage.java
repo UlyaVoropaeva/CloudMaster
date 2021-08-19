@@ -15,6 +15,7 @@ public class AuthMessage extends AbstractMessage {
     public AuthMessage(byte[] data) {
         this.data = data;
     }
+
     public String getLogin() {
         return login;
     }

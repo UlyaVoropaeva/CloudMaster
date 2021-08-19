@@ -3,23 +3,30 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
+import javax.sound.midi.Patch;
+import java.nio.file.Paths;
+
 
 /**
  * Класс клиента для распознавания командных сообщений и обработчиков команд управления
  */
 
-public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
+public class NettyClientDecoder extends ChannelInboundHandlerAdapter {
     //принимаем объект исходящего хэндлера
     private GMClient storageClient;
+    //принимаем объект файлового обработчика
+    private FileUtils fileUtils;
     //принимаем объект соединения
     private ChannelHandlerContext ctx;
     //принимаем объект контроллера
     private Controller controller;
 
-    public NettyServerDecoder(GMClient storageClient) {
+    public NettyClientDecoder(GMClient storageClient) {
         this.storageClient = storageClient;
         //принимаем объект контроллера
         controller = storageClient.getController();
+        //принимаем объект файлового обработчика
+        fileUtils = storageClient.getFileUtils();
     }
 
     @Override
@@ -83,11 +90,16 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
                 //вызываем метод обработки ответа сервера
                 onAuthOKServerResponse(commandMessage);
                 break;
+
+            //обрабатываем полученное от сервера подтверждение успешной загрузки(сохранении)
+            // файла в облачное хранилище
             case SERVER_RESPONSE_UPLOAD_ITEM_OK:
+                break;
                 //обрабатываем полученное от сервера подтверждение успешной загрузки(сохранении)
                 // всего большого файла(по фрагментно) в облачное хранилище
             case SERVER_RESPONSE_UPLOAD_FILE_FRAGS_OK:
-
+                onUploadFileFragOkServerResponse(commandMessage);
+                break;
                 //обрабатываем полученное от сервера сообщение об ошибке регистрации в облачное хранилище
             case SERVER_RESPONSE_REGISTRATION_ERROR:
                 //вызываем метод обработки ответа сервера
@@ -116,6 +128,104 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
                 //вызываем метод обработки ответа сервера
                 onUploadFileFragErrorServerResponse(commandMessage);
                 break;
+            //обрабатываем полученное от сервера подтверждение успешного скачивания файла из облачного хранилища
+            case SERVER_RESPONSE_DOWNLOAD_ITEM_OK:
+                //вызываем метод обработки ответа сервера со скачанным целым файлом внутри
+                onDownloadItemOkServerResponse(commandMessage);
+                break;
+            //обрабатываем полученное от сервера сообщение об ошибке скачивания файла из облачного хранилища
+            case SERVER_RESPONSE_DOWNLOAD_ITEM_ERROR:
+                //вызываем метод обработки ответа сервера
+                onDownloadFileErrorServerResponse(commandMessage);
+                break;
+            //обрабатываем полученный от сервера ответ на запрос на скачивание с фрагментом файла из облачного хранилища
+            case SERVER_RESPONSE_DOWNLOAD_FILE_FRAG_OK:
+                //вызываем метод обработки ответа от сервера с файлом-фрагментом
+                //в директорию клиента
+                onDownloadFileFragOkServerResponse(commandMessage);
+                break;
+
+        }
+    }
+
+    /**
+     * Метод обрабатывает полученное от сервера сообщение об ошибке
+     * скачивания объекта элемента(файла) из облачного хранилища
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onDownloadFileErrorServerResponse(CommandMessage commandMessage) {
+        storageClient.showTextInController("сообщение об ошибке: скачивания объекта элемента(файла) из облачного хранилища");
+    }
+
+    /**
+     * Метод обработки ответа сервера со скачанным целым объектом элемента(файлом) внутри
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onDownloadItemOkServerResponse(CommandMessage commandMessage) {
+        //вынимаем объект файлового сообщения из объекта сообщения(команды)
+        FileMessage fileMessage = (FileMessage) commandMessage.getMessageObject();
+        //если сохранение прошло удачно
+        if (storageClient.downloadItem(fileMessage)) {
+            //очищаем метку уведомлений
+            storageClient.showTextInController("");
+            //обновляем список файловых объектов на клиенте
+
+            //если что-то пошло не так
+        } else {
+
+            //выводим сообщение в GUI
+            storageClient.showTextInController("что то пошло не так  со скачанным целым объектом элемента(файлом) ");
+        }
+    }
+
+    /**
+     * Метод обработки ответа от сервера на скачивание файла-фрагмента
+     * в директорию в клиенте.
+     *
+     * @param commandMessage - объект сообщения(команды)
+     */
+    private void onDownloadFileFragOkServerResponse(CommandMessage commandMessage) {
+        //вынимаем объект файлового сообщения из объекта сообщения(команды)
+        FileFragmentMessage fileFragMsg = (FileFragmentMessage) commandMessage.getMessageObject();
+        //объявляем переменную типа команды
+        Commands command;
+        //если сохранение полученного фрагмента файла во временную папку клиента прошло удачно
+        if (storageClient.downloadItemFragment(fileFragMsg)) {
+            //выводим в GUI информацию с номером загруженного фрагмента файла
+            storageClient.showTextInController("File downloading. Completed fragment: " +
+                    fileFragMsg.getCurrentFragNumber() +
+                    "/" + fileFragMsg.getTotalFragsNumber());
+            //отправляем сообщение на сервер: подтверждение, что все прошло успешно
+            command = Commands.CLIENT_RESPONSE_DOWNLOAD_FILE_FRAG_OK;
+            //если что-то пошло не так
+        } else {
+            //выводим сообщение в GUI
+            showTextInController("что-то пошло не так, сообщение не отправлено");
+            //инициируем переменную типа команды - ответ об ошибке
+            command = Commands.CLIENT_RESPONSE_DOWNLOAD_FILE_FRAG_ERROR;
+        }
+        //обнуляем байтовый массив в объект сообщения фрагмента файла
+        fileFragMsg.setData(null);
+        //отправляем объект сообщения(команды) серверу
+        ctx.writeAndFlush(new CommandMessage(command, fileFragMsg));
+        //если это последний фрагмент
+        if (fileFragMsg.isFinalFileFragment()) {
+            //выводим в GUI информацию о компиляции итогового файла из фрагментов в сетевом хранилише
+            storageClient.showTextInController("Фаил загружен...");
+            //если корректно собран файл из фрагментов сохраненных во временную папку
+            if (storageClient.compileItemFragments(fileFragMsg)) {
+                //очищаем метку уведомлений
+                showTextInController("");
+                //обновляем список файловых объектов на клиенте
+                controller.updateFilesList(Paths.get(
+                        fileFragMsg.getToDirectoryItem().getFullFilename()));
+                //если что-то пошло не так
+            } else {
+                //выводим сообщение в GUI
+                showTextInController("что-то пошло не так, сообщение не отправлено");
+            }
         }
     }
 
@@ -133,7 +243,7 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
                 "Ошибка загрузки фрагмента: " + fileFragMsg.getCurrentFragNumber() +
                 "/" + fileFragMsg.getTotalFragsNumber());
         //повторяем отправку на загрузку этого фрагмента заново
-        storageClient.sendFileFragment(fileFragMsg, Commands.REQUEST_SERVER_UPLOAD_FILE_FRAG);
+        storageClient.sendFileFragmentMsg(fileFragMsg, Commands.REQUEST_SERVER_UPLOAD_FILE_FRAG);
     }
 
     /**
@@ -179,10 +289,12 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
      * @param commandMessage - объект сообщения(команды)
      */
     private void onServerConnectedResponse(CommandMessage commandMessage) {
-
+        //открываем окно авторизации
+        controller.openAuthWindowInGUI();
         //устанавливаем режим отображения "Подключен"
         controller.setDisconnectedMode(false);
     }
+
     /**
      * Метод обрабатывает полученное от сервера подтверждение готовности отключения клиента.
      *
@@ -215,7 +327,7 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
         //выводим сообщение в метку уведомлений
         showTextInController("полученно от сервера подтверждение успешной регистрации");
         //закрываем регистрационное окно и открываем авторизационное окно
-        controller.setRegisteredAndUnauthorisedMode();
+        //  controller.setRegisteredAndUnauthorisedMode();
     }
 
     /**
@@ -226,7 +338,6 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
      */
     private void onRegistrationErrorServerResponse(CommandMessage commandMessage) {
         //выводим сообщение в нижнюю метку
-        controller.setAuthorizedMode(true);
         showTextInController("полученно от сервера сообщение об ошибке регистрации...");
     }
 
@@ -237,13 +348,7 @@ public class NettyServerDecoder extends ChannelInboundHandlerAdapter {
      */
     private void onAuthOKServerResponse(CommandMessage commandMessage) {
         //устанавливаем режим отображения "Авторизован"
-        //controller.setAuthorizedMode(true);
-        //выводим в список файлов и папок в корневой пользовательской директории в сетевом хранилище
-        updateStorageItemListInController(commandMessage);
-    }
-
-    private void updateStorageItemListInController(CommandMessage commandMessage) {
-
+        controller.setAuthorizedMode(true);
     }
 
     /**

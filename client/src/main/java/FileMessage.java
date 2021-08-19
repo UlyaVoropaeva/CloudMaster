@@ -1,13 +1,7 @@
-
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-/**
- * A Class of message objects for a files of a size less than
- * CONST_FRAG_SIZE in the FileFragmentMessage class.
- */
 public class FileMessage extends AbstractMessage {
     //объявляем переменную размера файла(в байтах)
     private long fileSize;
@@ -18,15 +12,31 @@ public class FileMessage extends AbstractMessage {
     //принимаем объект родительской директории элемента в сетевом хранилище
     private FileInfo storageDirectoryItem;
     //принимаем объект элемента
-    private FileInfo fileInfo;
+    private FileInfo item;
     //принимаем переменную нового имени файла
     private String newName;
     //объявляем переменную контрольной суммы целого файла
     private String fileChecksum;
 
-    public FileMessage(FileInfo storageDirectoryItem, FileInfo fileInfo, long fileSize) {
+    //Конструкктор предназначен для загрузки всей операции с файлами
+    public FileMessage(FileInfo storageDirectoryItem, FileInfo item, long fileSize) {
         this.storageDirectoryItem = storageDirectoryItem;
-        this.fileInfo = fileInfo;
+        this.item = item;
+        this.fileSize = fileSize;
+    }
+
+    //Конструкктор предназначен для скачивания
+    public FileMessage(FileInfo storageDirectoryItem, FileInfo clientDirectoryItem, FileInfo item) {
+        this.storageDirectoryItem = storageDirectoryItem;
+        this.clientDirectoryItem = clientDirectoryItem;
+        this.item = item;
+    }
+
+    //Конструкктор предназначен для скачивания
+    public FileMessage(FileInfo storageDirectoryItem, FileInfo clientDirectoryItem, FileInfo item, long fileSize) {
+        this.storageDirectoryItem = storageDirectoryItem;
+        this.clientDirectoryItem = clientDirectoryItem;
+        this.item = item;
         this.fileSize = fileSize;
     }
 
@@ -42,8 +52,16 @@ public class FileMessage extends AbstractMessage {
         this.data = Files.readAllBytes(Paths.get(itemPathname));
     }
 
-    public String getNewName() {
-        return newName;
+    public FileInfo getClientDirectoryItem() {
+        return clientDirectoryItem;
+    }
+
+    public FileInfo getStorageDirectoryFileInfo() {
+        return storageDirectoryItem;
+    }
+
+    public FileInfo getFileInfo() {
+        return item;
     }
 
     public long getFileSize() {
@@ -53,6 +71,7 @@ public class FileMessage extends AbstractMessage {
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
     }
+
     public byte[] getData() {
         return data;
     }
@@ -63,15 +82,6 @@ public class FileMessage extends AbstractMessage {
 
     public void setFileChecksum(String fileChecksum) {
         this.fileChecksum = fileChecksum;
-    }
-
-    public FileInfo getStorageDirectoryFileInfo() {
-        return storageDirectoryItem;
-    }
-
-    public FileInfo getFileInfo() {
-        return fileInfo;
-
     }
 
 

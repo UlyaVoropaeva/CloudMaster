@@ -31,10 +31,12 @@ public class FileUtils {
     //инициируем контсанту названия алгоритма расчета контрольной суммы
     private final String algorithm = "SHA-512";
 
+
     /**
      * Метод читает данные из целого файла в заданной директории в объект файлового сообщения.
+     *
      * @param realItemPath - объект реального пути к объекту элемента
-     * @param fileMessage - объект файлового сообщения
+     * @param fileMessage  - объект файлового сообщения
      * @return - результат чтения данных из файла
      */
 
@@ -59,12 +61,13 @@ public class FileUtils {
 
     /**
      * Метод отправки по частям большого файла размером более константы максмального размера фрагмента файла.
-     * @param toDirItem - объект директории назначения
-     * @param item - объект элемента(исходный файл)
+     *
+     * @param toDirItem    - объект директории назначения
+     * @param item         - объект элемента(исходный файл)
      * @param fullFileSize - размер целого файла в байтах
-     * @param rootPath - объект пути к корневой папке
-     * @param ctx - сетевое соединение
-     * @param command - конастанта типа команды
+     * @param rootPath     - объект пути к корневой папке
+     * @param ctx          - сетевое соединение
+     * @param command      - конастанта типа команды
      */
     public void cutAndSendFileByFrags(FileInfo toDirItem, FileInfo item,
                                       long fullFileSize, Path rootPath,
@@ -101,13 +104,33 @@ public class FileUtils {
                 }
 
                 //***отправляем последний фрагмент, если он есть***
-                if(totalFragsNumber > totalEntireFragsNumber){
+                if (totalFragsNumber > totalEntireFragsNumber) {
                     //инициируем байтовый массив для чтения данных для последнего фрагмента
                     byte[] dataFinal = new byte[finalFileFragmentSize];
                     //вызываем метод отправки сообщения
                     sendFileFragment(toDirItem, item, fullFileSize,
                             totalFragsNumber, totalFragsNumber, finalFileFragmentSize,
                             dataFinal, startByte, rootPath, ctx, command);
+
+                    try {
+                        //инициируем объект фрагмента файлового сообщения
+                        FileFragmentMessage fileFragmentMessage = new FileFragmentMessage(
+                                toDirItem, item, fullFileSize, totalFragsNumber,
+                                totalFragsNumber, finalFileFragmentSize, data);
+                        //читаем данные во фрагмент с определенного места файла
+                        fileFragmentMessage.readFileDataToFragment(
+                                getRealPath(item.getFullFilename(), rootPath).toString(),
+                                startByte);
+                        //вычисляем и сохраняем в объект сообщения контрольную сумму
+                        // байтового массива фрагмента файла
+                        fileFragmentMessage.setFragChecksum(
+                                hashBytes(fileFragmentMessage.getData()));
+                        //отправляем на сервер объект сообщения(команды)
+
+                        ctx.writeAndFlush(new CommandMessage(command, fileFragmentMessage));
+                    } catch (NoSuchAlgorithmException | IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -118,22 +141,23 @@ public class FileUtils {
 
     /**
      * Метод отправки объекта сообщения с объектом фрагментом файла.
-     * @param toDirItem - объект директории назначения
-     * @param item - объект элемента(исходный файл)
-     * @param fullFileSize - размер целого файла в байтах
-     * @param fragNumber - номер фрагмента
+     *
+     * @param toDirItem        - объект директории назначения
+     * @param item             - объект элемента(исходный файл)
+     * @param fullFileSize     - размер целого файла в байтах
+     * @param fragNumber       - номер фрагмента
      * @param totalFragsNumber - общее количество фрагментов
-     * @param fileFragSize - размер фрагмента в байтах
-     * @param data - байтовый массив с данными фрагмента файла
-     * @param startByte - индекс начального байта фрагмента в целом файле
-     * @param rootPath - объект пути к корневой папке
-     * @param ctx - сетевое соединение
-     * @param command - конастанта типа команды
+     * @param fileFragSize     - размер фрагмента в байтах
+     * @param data             - байтовый массив с данными фрагмента файла
+     * @param startByte        - индекс начального байта фрагмента в целом файле
+     * @param rootPath         - объект пути к корневой папке
+     * @param ctx              - сетевое соединение
+     * @param command          - конастанта типа команды
      */
     public void sendFileFragment(FileInfo toDirItem, FileInfo item, long fullFileSize,
                                  int fragNumber, int totalFragsNumber, int fileFragSize,
                                  byte[] data, long startByte, Path rootPath,
-                                 ChannelHandlerContext ctx, Commands command)  {
+                                 ChannelHandlerContext ctx, Commands command) {
         try {
             //инициируем объект фрагмента файлового сообщения
             FileFragmentMessage fileFragmentMessage = new FileFragmentMessage(
@@ -148,6 +172,7 @@ public class FileUtils {
             fileFragmentMessage.setFragChecksum(
                     hashBytes(fileFragmentMessage.getData()));
             //отправляем на сервер объект сообщения(команды)
+
             ctx.writeAndFlush(new CommandMessage(command, fileFragmentMessage));
         } catch (NoSuchAlgorithmException | IOException e) {
             e.printStackTrace();
@@ -157,7 +182,8 @@ public class FileUtils {
 
     /**
      * Метод сохраняет данные из полученного байтового массива в целый файл.
-     * @param fileMessage - объект файлового сообщения
+     *
+     * @param fileMessage  - объект файлового сообщения
      * @param realItemPath - объект реального пути к объекту элемента
      * @return - результат сохранения данных из байтового массива в файл
      */
@@ -166,13 +192,13 @@ public class FileUtils {
             //создаем новый файл и записываем в него данные из объекта файлового сообщения
             Files.write(realItemPath, fileMessage.getData(), StandardOpenOption.CREATE);
             //если длина сохраненного файла отличается от длины принятого файла
-            if(Files.size(realItemPath) != fileMessage.getFileSize()){
+            if (Files.size(realItemPath) != fileMessage.getFileSize()) {
                 System.out.println("Неверный размер сохраненного файла");
 
                 return false;
-            //если контрольная сумма сохраненного файла отличается от исходной контрольной суммы
-            } else if(!fileMessage.getFileChecksum().
-                    equals(hashBytes(algorithm, Files.readAllBytes(realItemPath.toFile().toPath())))){
+                //если контрольная сумма сохраненного файла отличается от исходной контрольной суммы
+            } else if (!fileMessage.getFileChecksum().
+                    equals(hashBytes(algorithm, Files.readAllBytes(realItemPath.toFile().toPath())))) {
                 System.out.println("Неправильная контрольная сумма сохраненного файла");
                 return false;
 
@@ -188,20 +214,21 @@ public class FileUtils {
     /**
      * Метод создает временную директорию, если нет, создает в ней временные файлы-фрагменты,
      * куда сохраняет данные из сообщения фрагмента файла.
+     *
      * @param realToTempDirPath - объект пути к временной папке для файлов-фрагментов
-     * @param realToFragPath - объект пути к файлу-фрагменту
-     * @param fileFragMsg - объект сообщения фрагмента файла
+     * @param realToFragPath    - объект пути к файлу-фрагменту
+     * @param fileFragMsg       - объект сообщения фрагмента файла
      * @return результат сохранения файла-фрагмента
      */
     public boolean saveFileFragment(Path realToTempDirPath, Path realToFragPath,
                                     FileFragmentMessage fileFragMsg) {
         try {
             //если текущий фрагмент первый
-            if(fileFragMsg.getCurrentFragNumber() == 1){
+            if (fileFragMsg.getCurrentFragNumber() == 1) {
                 //инициируем объект временной директории
                 File dir = new File(realToTempDirPath.toString());
                 //если временная директория уже существует(возможно не пустая)
-                if(dir.exists()){
+                if (dir.exists()) {
                     //то предварительно удаляем
                     deleteFolder(dir);
                 }
@@ -209,12 +236,12 @@ public class FileUtils {
             //создаем новый файл-фрагмент и записываем в него данные из объекта файлового сообщения
             Files.write(realToFragPath, fileFragMsg.getData(), StandardOpenOption.CREATE);
             //если длина сохраненного файла-фрагмента отличается от длины принятого фрагмента файла
-            if(Files.size(realToFragPath) != fileFragMsg.getFileFragmentSize()){
-                System.out.println( "Направильно сохранен фрагмент файла");
+            if (Files.size(realToFragPath) != fileFragMsg.getFileFragmentSize()) {
+                System.out.println("Направильно сохранен фрагмент файла");
                 return false;
-            //если контрольная сумма сохраненного файла-фрагмента отличается от исходной контрольной суммы
-            } else if(!fileFragMsg.getFragChecksum().
-                    equals(hashBytes(algorithm, Files.readAllBytes(realToFragPath.toFile().toPath())))){
+                //если контрольная сумма сохраненного файла-фрагмента отличается от исходной контрольной суммы
+            } else if (!fileFragMsg.getFragChecksum().
+                    equals(hashBytes(algorithm, Files.readAllBytes(realToFragPath.toFile().toPath())))) {
                 System.out.println("Неправильная контрольная сумма сохраненного файла");
                 return false;
             }
@@ -229,9 +256,10 @@ public class FileUtils {
     /**
      * Метод собирает целый файл из файлов-фрагментов, сохраненных во временной папке,
      * сохраняет его в директорию назначения и удаляет временную папку с файлами-фрагментами
+     *
      * @param realToTempDirPath - объект реального пути к временной папка для файлов-фрагментов
-     * @param realToFilePath - объект реального пути к итоговому файлу
-     * @param fileFragMsg - объект файлового сообщения
+     * @param realToFilePath    - объект реального пути к итоговому файлу
+     * @param fileFragMsg       - объект файлового сообщения
      * @return результат процесса сборки целого файла из файлов-фрагментов
      */
     public boolean compileFileFragments(Path realToTempDirPath, Path realToFilePath,
@@ -243,20 +271,20 @@ public class FileUtils {
             //инициируем массив файлов-фрагментов во временной папке
             File[] fragFiles = tempDirFileObject.listFiles();
             //если количество файлов-фрагментов не совпадает с требуемым
-            if(fragFiles == null ||
-                    fragFiles.length != fileFragMsg.getTotalFragsNumber()){
+            if (fragFiles == null ||
+                    fragFiles.length != fileFragMsg.getTotalFragsNumber()) {
                 return false;
             }
             //переписываем данные из канала-источника в канал-назначения данные
             // из файлов-фрагментов в итоговый файл
             transferDataFromFragsToFinalFile(realToFilePath, fragFiles);
             //если длина сохраненного файла отличается от длины полного исходного файла
-            if(Files.size(realToFilePath) != fileFragMsg.getFullFileSize()){
+            if (Files.size(realToFilePath) != fileFragMsg.getFullFileSize()) {
                 return false;
-            //если файл собран без ошибок
+                //если файл собран без ошибок
             } else {
                 //***удаляем временную папку***
-                if(!deleteFolder(tempDirFileObject)){
+                if (!deleteFolder(tempDirFileObject)) {
                     return false;
                 }
             }
@@ -271,8 +299,9 @@ public class FileUtils {
     /**
      * Метод переписывает данные из канала-источника в канал-назначения данные
      * из файлов-фрагментов в итоговый файл.
+     *
      * @param realToFilePath - объект пеального пути к итоговому файлу
-     * @param fragFiles - массив файлов-фрагментов
+     * @param fragFiles      - массив файлов-фрагментов
      * @throws IOException - исключение
      */
     private void transferDataFromFragsToFinalFile(Path realToFilePath,
@@ -302,16 +331,17 @@ public class FileUtils {
 
     /**
      * Метод удаляет файловый объект.
+     *
      * @param fileObject - файловый объект
      * @return true - удаление прошло успешно
      */
     public boolean deleteFileObject(File fileObject) {
         boolean result;
         //если это директория
-        if(fileObject.isDirectory()){
+        if (fileObject.isDirectory()) {
             //очищаем и удаляем папку
             result = deleteFolder(fileObject);
-        } else{
+        } else {
             //удаляем файл
             result = fileObject.delete();
         }
@@ -320,22 +350,23 @@ public class FileUtils {
 
     /**
      * Метод удаляет заданную папку и все объекты в ней.
+     *
      * @param folder - файловый объект заданной папки
      * @return true - удалена папка и все объекты в ней
      */
     private boolean deleteFolder(File folder) {
         //если папка недоступна, выходим с false
-        if(folder.listFiles() == null) {
+        if (folder.listFiles() == null) {
             System.out.println("Неправильно сохранненый фрагмент файла");
             return false;
         }
         //в цикле листаем временную папку и удаляем все файлы-фрагменты
         for (File f : Objects.requireNonNull(folder.listFiles())) {
             //если это директория
-            if(f.isDirectory()){
+            if (f.isDirectory()) {
                 //очищаем и удаляем папку
                 deleteFolder(f);
-            } else{
+            } else {
                 //удаляем файл
                 System.out.println("удаляем файл " + f.delete());
             }
@@ -343,19 +374,23 @@ public class FileUtils {
         //теперь можем удалить пустую папку
         return Objects.requireNonNull(folder.listFiles()).length == 0 && folder.delete();
     }
+
     /**
      * Метод возвращает реальный путь к объекту элемента.
+     *
      * @param itemPathname - строка относительного пути к объекту элемента
-     * @param rootPath - объект пути к реальной корневой директории
+     * @param rootPath     - объект пути к реальной корневой директории
      * @return - реальный путь к объекту элемента
      */
     public Path getRealPath(String itemPathname, Path rootPath) {
         //возвращаем объект реального пути к заданому объекту элемента списка
         return Paths.get(rootPath.toString(), itemPathname);
     }
+
     /**
      * Перегруженный метод генеририрует строку хэша для байтового массива,
      * используя алгоритм по умолчанию.
+     *
      * @param bytes - заданный байтовый массив
      * @return - строку хэша для байтового массива
      */
@@ -368,11 +403,13 @@ public class FileUtils {
         String fx = "%0" + messageDigest.getDigestLength() + "x";
         return String.format(fx, new BigInteger(1, messageDigest.digest()));
     }
+
     /**
      * Перегруженный метод генеририрует строку хэша для байтового массива,
      * используя заданный алгоритм.
+     *
      * @param algorithm - заданный алгоритм вычисления хэша
-     * @param bytes - заданный байтовый массив
+     * @param bytes     - заданный байтовый массив
      * @return - строку хэша для байтового массива
      */
     public String hashBytes(String algorithm, byte[] bytes) throws NoSuchAlgorithmException {
@@ -383,5 +420,28 @@ public class FileUtils {
         //форматируем строку хэша
         String fx = "%0" + messageDigest.getDigestLength() + "x";
         return String.format(fx, new BigInteger(1, messageDigest.digest()));
+    }
+
+    /**
+     * Метод создает файловый объект новой папки.
+     *
+     * @param realDirPathname - строка пути к новой папке
+     * @return - результат создания файлового объекта новой папки
+     */
+    public boolean createNewFolder(String realDirPathname) {
+        //инициируем новый файловый объект
+        File dir = new File(realDirPathname);
+        //если такая папке уже существует
+        if (dir.exists()) {
+            //выходим с false
+            System.out.println("CloudStorageServer.createNewFolder() - A folder with this name exists.");
+            return false;
+        }
+        //возвращаем результат создания новой папки
+        return dir.mkdir();
+    }
+
+    public CountDownLatch getCountDownLatch() {
+        return countDownLatch;
     }
 }

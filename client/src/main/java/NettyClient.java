@@ -47,13 +47,12 @@ public class NettyClient {
                             //сериализатор netty объекта сообщения в исходящих поток байтов
                             new ObjectEncoder(),
                             //инициируем объект входящего обработчика объектов сообщений(команд)
-                            new NettyServerDecoder(storageClient)
+                            new NettyClientDecoder(storageClient)
                     );
                 }
             });
             //устанавливаем подключение к серверу и начинаем принимать входящие сообщения
-            ChannelFuture future;
-            future = b.connect("localhost", PORT).sync();
+            ChannelFuture future = b.connect("localhost", PORT).sync();
             //если соединение установлено
             onConnectionReady(future);
 
@@ -63,12 +62,10 @@ public class NettyClient {
             workerGroup.shutdownGracefully();
         }
     }
-    public void onConnectionReady(ChannelFuture future) {
-        printMsg("Waiting for the server answer...");
-    }
 
-    public void printMsg(String msg) {
-        storageClient.showTextInController(msg);
+    public void onConnectionReady(ChannelFuture future) {
+
+        storageClient.showTextInController("Соединение установлено...");
     }
 
 }
